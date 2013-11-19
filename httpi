@@ -14,97 +14,13 @@ use CA;
 # WHITE HATS ONLY BELOW THIS POINT -- SEE DOCUMENTATION FIRST #
 ###############################################################
 
-%system_content_types =
-("html" => "text/html",
-	"htm" => "text/html",
-	"txt" => "text/plain",
-	"xml" => "text/xml",
-	"xsl" => "text/xml",
-	"xhtml" => "application/xhtml+xml",
-	"css" => "text/css",
-	"wml" => "text/vnd.wap.wml",
-	"gif" => "image/gif",
-	"jpeg" => "image/jpeg",
-	"jpg" => "image/jpeg",
-	"bmp" => "image/bmp",
-	"png" => "image/png",
-	"tif" => "image/tiff",
-	"tiff" => "image/tiff",
-	"ico" => "image/x-icon",
-	"svg" => "image/svg+xml",
-	"svgz" => "image/svg+xml",
-	"wbmp" => "image/vnd.wap.wbmp",
-	"wbm" => "image/vnd.wap.wbmp",
-	"xbm" => "image/x-xbitmap",
-	"mp3" => "audio/x-mpeg",
-	"wma" => "audio/x-ms-wma",
-	"wav" => "audio/x-wav",
-	"au" => "audio/basic",
-	"aif" => "audio/x-aiff",
-	"aiff" => "audio/x-aiff",
-	"ogg" => "audio/x-ogg",
-	"oga" => "audio/x-ogg",
-	"mid" => "audio/midi",
-	"wma" => "audio/x-ms-wma",
-	"mpeg" => "video/mpeg",
-	"mpg" => "video/mpeg",
-	"aac" => "audio/aac",
-	"ogv" => "video/x-ogg",
-	"ogx" => "application/x-ogg",
-	"avi" => "video/x-msvideo",
-	"wmv" => "video/x-ms-wmv",
-	"asf" => "video/x-ms-asf",
-	"mov" => "video/quicktime",
-	"mp4" => "video/mp4",
-	"rv" => "video/vnd.m-realvideo",
-	"rm" => "application/vnd.m-realmedia",
-	"ra" => "audio/vnd.m-realaudio",
-	"ram" => "audio/vnd.m-realaudio",
-	"pdf" => "application/pdf",
-	"fdf" => "application/vnd.fdf",
-	"class" => "application/octet-stream",
-	"jar" => "application/octet-stream",
-	"js" => "application/x-javascript",
-	"lnk" => "application/x-hyperlink",
-	"prg" => "application/x-c64-prg-binary",
-	"d64" => "application/x-c64-disk-image",
-	"tar" => "application/x-tar",
-	"sit" => "application/x-stuffit",
-	"Z" => "application/x-compress",
-	"gz"  => "application/x-gzip",
-	"apk" => "application/vnd.android.package-archive",
-	"dmg" => "application/octet-stream",
-	"img" => "application/octet-stream",
-	"lzh" => "application/octet-stream",
-	"lha" => "application/octet-stream",
-	"exe" => "application/octet-stream",
-	"com" => "application/octet-stream",
-	"zip" => "application/x-zip-compressed",
-	"hqx" => "application/x-binhex",
-	"swf" => "x-shockwave-flash",
-	"flv" => "video/x-flv",
-
-	"bin" => "application/octet-stream");
 
 $logfile = "/dev/null";
-$path = "/tmp/ioc";
-
-unless(-d $path) {
-	mkdir $path or die "can't create dir $path: $!";
-}
-
-unless(-f "$path/index.html") {
-	symlink "$Bin/index.html","$path/index.html" or die "can't symlink: $!";
-}
 
 $sockaddr = 'S n a4 x8';
 $server_host = `hostname -s`;
 $server_port = "8080";
 
-
-%content_types =
-("html" => "text/html",
-	"htm" => "text/html");
 %restrictions = (
 	"/nw" => "^10\.##^Mozilla#MSIE",
 	"/status" => "####voyeur:daNrZR3TcSwD2",
@@ -117,9 +33,6 @@ Server: HTTPi/$VERSION
 MIME-Version: 1.0
 EOF
 
-
-%content_types = (%system_content_types, %content_types);
-undef %system_content_types;
 
 if ($pid = fork()) { exit; }
 $0 = "dhttpi: binding port ...";
@@ -380,7 +293,7 @@ EOF
 		delete($ENV{'PATH_INFO'});
 		IRED: ($hostname, $port, $ip) = &sock_to_host();
 
-		$mtime = 0;
+		$mtime = &rfctime(scalar gmtime, 1);
 		SERVEIT:
 		if ($mtime eq $modsince) {
 			&htsponse(304, "Not Modified");
@@ -388,25 +301,48 @@ EOF
 			&log; exit;
 		}
 
-		$ctype = 'text/plain';
+
 		if ($pid = fork()) { kill 15, $$; exit; }
 
-		$content = "Bad Request\n Use pvget?<pvname>\n";
+		my $content;
+		my $ctype = "";
+		if( $variables eq "html") {
+			$ctype = "text/html";
+		} else {
+			$ctype = "text/plain";
+		}
+		my @pvs = split( "/", $address);
 
-		if( $address =~ m~^/pv_get~ ) {
+		if($variables eq "html") {
+			$request_uri = $address . (($variables) ? "?$variables" : "");
+			$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
+		}
+
+		foreach my $pv (@pvs) {
+			next unless $pv;
 
 			eval {
-				$chan = CA->new($variables);
+				$chan = CA->new($pv);
 				CA->pend_io(1);
 				$chan->get;
 				CA->pend_io(1);
 			};
 
 			if ($@) {
-				$content = "PV not found!\n";
+				if($variables eq "html") {
+					$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>";
+				}
 			} else {
-				$content = '{ "PV": "'.$variables.'", "Value":'.$chan->value.'" }';
+				if($variables eq "html") {
+						$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>";
+				} else {
+						$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.'" }';
+				}
 			}
+		}
+
+		if($variables eq "html") {
+			$content .= "</table></body></html>";
 		}
 
 		$length = length($content);
