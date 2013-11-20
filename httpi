@@ -29,13 +29,13 @@ EOF
 
 
 if ($pid = fork()) { exit; }
-$0 = "dhttpi: binding port ...";
+$0 = "epics2web: binding port ...";
 $bindthis = pack($sockaddr, 2, $server_port, pack('C4', 0, 0, 0, 0));
 socket(S, 2, 1, 6);
 setsockopt(S, 1, 2, 1);
 bind(S, $bindthis) || die("$0: while binding port $server_port:\n\"$!\"\n");
 listen(S, 128);
-$0 = "dhttpi";
+$0 = "epics2web";
 
 $statiosuptime = time();
 
@@ -135,7 +135,7 @@ sub alarmsignals {
 }
 
 sub master {
-	$0 = "dhttpi: handling request";
+	$0 = "epics2web: handling request";
 	$sock = getpeername(STDIN);
 	$rfcdate = &rfctime(scalar gmtime, 1);
 	$date = scalar localtime;
@@ -157,7 +157,7 @@ sub master {
 			$httpver = ($httpver =~ m#HTTP/([0-9]\.[0-9]+)#) ?
 			($1) : (0.9);
 			$address =~ s#^http://[^/]+/#/#;
-			$0 = $execstring = "dhttpi: $method $address $httpver";
+			$0 = $execstring = "epics2web: $method $address $httpver";
 			next unless ($httpver < 1);
 		} else {
 			s/[\r\l\n\s]+$//;
@@ -345,15 +345,15 @@ EOF
 	}
 
 
-	$0 = "dhttpi: on ANY:$server_port, ready!";
+	$0 = "epics2web: on ANY:$server_port, ready!";
 	$master_pid = $$;
 	for (;;) {
 		if ($secondary_pid = fork()) {
 			waitpid($secondary_pid, 0);
-			$0 = "dhttpi: on ANY:$server_port, last request " .
+			$0 = "epics2web: on ANY:$server_port, last request " .
 			scalar localtime;
 		} else {
-			$0 = "dhttpi (child of $master_pid): waiting for connect";
+			$0 = "epics2web (child of $master_pid): waiting for connect";
 			$addr=accept(NS,S);
 			open(STDIN, "<&NS");
 			open(STDOUT, ">&NS");
