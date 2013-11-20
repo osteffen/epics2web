@@ -245,48 +245,57 @@ sub master {
 			$ctype = "text/html";
 		}
 
-		my @pvs = split( "/", $address);
-
-		if($variables eq "json") {
-			$content .= "{\n";
+		if($address eq "/" ) {
+			$example_url = "http://".$httphost.":".$server_port."/BEAM:FaradayCup";
+			$content  = '<html><head><title>EPICS 2 WEB</title></head><body><h1>A2 EPICS 2 WEB</h1>';
+			$content .= 'Usage:<br/>Give a list of record names you want to see as the file/path of the url, separete names by /.<br>';
+			$content .= 'Example: <a href="'.$example_url.'">'.$example_url.'</a></body></html>';
 		} else {
-			$request_uri = $address . (($variables) ? "?$variables" : "");
-			$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
-		}
 
-		undef $SIG{'__DIE__'};
+			my @pvs = split( "/", $address);
 
-		foreach my $pv (@pvs) {
-			next unless $pv;
-			next unless (length($pv) < 60);
-
-			eval {
-				$chan = CA->new($pv);
-				CA->pend_io(1);
-				$chan->get;
-				CA->pend_io(1);
-			};
-
-			if ($@) {
-				unless($variables eq "json") {
-					$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>\n";
-				}
+			if($variables eq "json") {
+				$content .= "{\n";
 			} else {
-				if($variables eq "json") {
-						$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.' }'."\n";
+				$request_uri = $address . (($variables) ? "?$variables" : "");
+				$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
+			}
+
+			undef $SIG{'__DIE__'};
+
+			foreach my $pv (@pvs) {
+				next unless $pv;
+				next unless (length($pv) < 60);
+
+				eval {
+					$chan = CA->new($pv);
+					CA->pend_io(1);
+					$chan->get;
+					CA->pend_io(1);
+				};
+
+				if ($@) {
+					unless($variables eq "json") {
+						$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>\n";
+					}
 				} else {
-						$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>\n";
+					if($variables eq "json") {
+							$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.' }'."\n";
+					} else {
+							$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>\n";
+					}
 				}
 			}
-		}
 
-		if($variables eq "json") {
-			$content .= "}\n";
-		} else {
-			$content .= "</table></body></html>";
+			if($variables eq "json") {
+				$content .= "}\n";
+			} else {
+				$content .= "</table></body></html>";
+			}
+			
+			$SIG{'__DIE__'} = \&dead;
+
 		}
-		
-		$SIG{'__DIE__'} = \&dead;
 
 
 		$length = length($content);
