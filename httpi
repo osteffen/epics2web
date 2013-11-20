@@ -306,14 +306,18 @@ EOF
 
 		my $content;
 		my $ctype = "";
-		if( $variables eq "html") {
-			$ctype = "text/html";
-		} else {
+
+		if( $variables eq "json") {
 			$ctype = "text/plain";
+		} else {
+			$ctype = "text/html";
 		}
+
 		my @pvs = split( "/", $address);
 
-		if($variables eq "html") {
+		if($variables eq "json") {
+			$content .= "{\n";
+		} else {
 			$request_uri = $address . (($variables) ? "?$variables" : "");
 			$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
 		}
@@ -329,19 +333,21 @@ EOF
 			};
 
 			if ($@) {
-				if($variables eq "html") {
-					$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>";
+				unless($variables eq "json") {
+					$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>\n";
 				}
 			} else {
-				if($variables eq "html") {
-						$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>";
+				if($variables eq "json") {
+						$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.' }'."\n";
 				} else {
-						$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.'" }';
+						$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>\n";
 				}
 			}
 		}
 
-		if($variables eq "html") {
+		if($variables eq "json") {
+			$content .= "}\n";
+		} else {
 			$content .= "</table></body></html>";
 		}
 
