@@ -3,7 +3,7 @@ use POSIX qw(SIGALRM SIGTERM SIGPIPE SIGHUP sigaction);
 use FindBin qw($Bin);
 $VERSION = "1.7.1 (Demonic/Linux)";
 
-use lib '/opt/epics/base/lib/perl';
+use lib '/home/epics/epics/base-3.14.12.2/lib/perl';
 use CA;
 
 # HTTPi Hypertext Tiny Truncated Process Implementation
