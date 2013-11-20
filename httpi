@@ -30,7 +30,7 @@ EOF
 
 if ($pid = fork()) { exit; }
 $0 = "dhttpi: binding port ...";
-$bindthis = pack($sockaddr, 2, 8080, pack('C4', 0, 0, 0, 0));
+$bindthis = pack($sockaddr, 2, $server_port, pack('C4', 0, 0, 0, 0));
 socket(S, 2, 1, 6);
 setsockopt(S, 1, 2, 1);
 bind(S, $bindthis) || die("$0: while binding port 8080:\n\"$!\"\n");
