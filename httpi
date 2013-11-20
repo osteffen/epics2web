@@ -256,6 +256,7 @@ sub master {
 
 		foreach my $pv (@pvs) {
 			next unless $pv;
+			next unless (length($pv) < 60);
 
 			eval {
 				$chan = CA->new($pv);
