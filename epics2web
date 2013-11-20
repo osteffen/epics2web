@@ -19,7 +19,7 @@ $logfile = "/dev/null";
 
 $sockaddr = 'S n a4 x8';
 $server_host = `hostname -s`;
-$server_port = "8080";
+$server_port = "8081";
 
 
 $headers = <<"EOF";
