@@ -254,6 +254,8 @@ sub master {
 			$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
 		}
 
+		undef $SIG{'__DIE__'};
+
 		foreach my $pv (@pvs) {
 			next unless $pv;
 			next unless (length($pv) < 60);
@@ -283,6 +285,9 @@ sub master {
 		} else {
 			$content .= "</table></body></html>";
 		}
+		
+		$SIG{'__DIE__'} = \&dead;
+
 
 		$length = length($content);
 
