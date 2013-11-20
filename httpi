@@ -21,12 +21,6 @@ $sockaddr = 'S n a4 x8';
 $server_host = `hostname -s`;
 $server_port = "8080";
 
-%restrictions = (
-	"/nw" => "^10\.##^Mozilla#MSIE",
-	"/status" => "####voyeur:daNrZR3TcSwD2",
-	"/" => "###(NPBot|WebZIP|HTTrack|eCatch|Offline Explorer|UdmSearch|WebCopier|internetseer|MSIECrawler|SuperBot|LinkWalker|Tutorial Crawler|WebReaper)",
-);
-# See documentation for interpreting this string.
 
 $headers = <<"EOF";
 Server: HTTPi/$VERSION
@@ -218,68 +212,6 @@ sub master {
 		1 while $address =~ s#/\.(/|$)#\1#;
 		1 while $address =~ s#/[^/]*/\.\.(/|$)#\1#;
 		1 while $address =~ s#^/\.\.(/|$)#\1#;
-		$fail = 0;
-		J: foreach(sort { length $a <=> length $b }
-			keys %restrictions) {
-			next if ($address !~ /^$_/);
-			($allowip, $denyip, $allowua, $denyua, $auser) =
-			split(/#/, $restrictions{$_});
-			if ($allowip || $denyip) {
-				($hostname, $port, $ip) = &sock_to_host();
-				($allowip && $ip !~ /$allowip/) && ($fail = 1,
-					last J);
-				($denyip && $ip =~ /$denyip/) && ($fail = 1,
-					last J);
-			}
-			($allowua && $httpua !~ /$allowua/) &&
-			($fail = 2, last J);
-			($denyua && $httpua =~ /$denyua/) &&
-			($fail = 2, last J);
-		}
-		if ($fail) {
-			&htsponse(403, "Forbidden");
-			if ($fail == 1) {
-				&hterror("Forbidden (Client Disallowed)", <<"EOF");
-Your network address (<i>$ip</i>) is not allowed to access this resource.
-EOF
-				&log; exit;
-			} else {
-				&hterror("Forbidden (Browser Disallowed)", <<"EOF");
-The browser you are using (<i>$httpua</i>) is not capable of or
-is not allowed access to this resource.
-EOF
-				&log; exit;
-			}
-		}
-		if ($auser) {
-			$httprawu =~ tr#A-Za-z0-9+/##cd;
-			$httprawu =~ tr#A-Za-z0-9+/# -_#;
-			$httprawu = unpack("u", pack("c", 32+0.75*length($httprawu))
-				. $httprawu);
-			($httpuser, $httppw) = split(/:/, $httprawu);
-			$fail = 1;
-			foreach $user (split(/,/, $auser)) {
-				($user, $pw) = split(/:/, $user);
-				($fail = 0, last) if ($user eq $httpuser &&
-					crypt($httppw, substr($pw, 0, 2)) eq $pw);
-			}
-			if ($fail) {
-				$httpuser = '';
-				&htsponse(401, "Authorization Required");
-				&hthead("WWW-Authenticate: Basic realm=\"$address\"");
-				&hterror("Authorization Required", <<"EOF");
-You must provide a username and password to use this resource. Either you
-entered this information incorrectly, or your browser does not know how to
-present the credentials required.
-EOF
-				&log; exit;
-			}
-		}
-
-		alarm 0;
-
-
-
 
 		$raddress = "$path$address"
 		;
