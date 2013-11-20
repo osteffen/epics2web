@@ -246,10 +246,13 @@ sub master {
 		}
 
 		if($address eq "/" ) {
-			$example_url = "http://".$httphost.":".$server_port."/BEAM:FaradayCup";
+			$example_url = "http://".$httphost.":".$server_port."/BEAM:FaradayCup/BEAM:IonChamber";
 			$content  = '<html><head><title>EPICS 2 WEB</title></head><body><h1>A2 EPICS 2 WEB</h1>';
 			$content .= 'Usage:<br/>Give a list of record names you want to see as the file/path of the url, separete names by /.<br>';
-			$content .= 'Example: <a href="'.$example_url.'">'.$example_url.'</a></body></html>';
+			$content .= 'Example: <a href="'.$example_url.'">'.$example_url.'</a><br>';
+			$content .= 'Add ?json to the end to get JSON formated output, like this: <a href="'.$example_url.'?json">'.$example_url.'?json</a><br>';
+			$content .= '</body></html>';
+
 		} else {
 
 			my @pvs = split( "/", $address);
