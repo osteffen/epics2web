@@ -36,7 +36,6 @@ Trouble Shooting
  * In **EPICS 3.15.01** (not EPICS 3.14.x), the PERL library is not
    correctly named (extraneous . in filename). See
    [Known Problems](http://www.aps.anl.gov/epics/base/R3-15/0-docs/KnownProblems.html).
-   Thus in order to correctly run the PERL scripts below `scripts/`
-   you must apply this
+   Thus in order to correctly run you must apply this
    [Patch](http://www.aps.anl.gov/epics/base/R3-15/0-docs/CONFIG-Unix.patch)
    **before** building.
