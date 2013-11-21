@@ -8,14 +8,14 @@ How to use
 ----------
 Open the URL in your browser. Like this:
 
-   http://hostname:port/pv1/pv2/pv3
+	http://hostname:port/pv1/pv2/pv3
 
 This will show a table containing the values of pv1, pv2, and pv3.
 The web page will refresh itself every 2 seconds.
 
 The output can be switched to the JSON format by adding ?json to the end of the URL:
 
-	   http://hostname:port/pv1/pv2/pv3?json
+	http://hostname:port/pv1/pv2/pv3?json
 
 
 Security Note
