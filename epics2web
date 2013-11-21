@@ -265,6 +265,7 @@ sub master {
 			}
 
 			undef $SIG{'__DIE__'};
+			my $first=1;
 
 			foreach my $pv (@pvs) {
 				next unless $pv;
@@ -283,7 +284,12 @@ sub master {
 					}
 				} else {
 					if($variables eq "json") {
-							$content .= '{ "PV": "'.$pv.'", "Value":'.$chan->value.' }'."\n";
+							if($first) {
+								$first=0;
+							} else {
+								$content .= ",\n";
+							}
+							$content .= ' "'.$pv.'": '.$chan->value;
 					} else {
 							$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>\n";
 					}
@@ -291,7 +297,7 @@ sub master {
 			}
 
 			if($variables eq "json") {
-				$content .= "}\n";
+				$content .= "\n}\n";
 			} else {
 				$content .= "</table></body></html>";
 			}
