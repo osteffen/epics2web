@@ -39,3 +39,8 @@ Trouble Shooting
    Thus in order to correctly run you must apply this
    [Patch](http://www.aps.anl.gov/epics/base/R3-15/0-docs/CONFIG-Unix.patch)
    **before** building.
+
+
+To Do
+-----
+ * add caching of PVs: keep a list of recently used PVs and monitor these, s   tore values. Remove a monitor when PV not used for some time.
