@@ -200,10 +200,10 @@ sub master {
 				"The server cannot understand your request.");
 			&log; exit;
 		}
-		if ($method !~ /^(GET|HEAD|POST)$/) {
+		if ($method !~ /^(GET)$/) {
 			&htsponse(501, "Not Implemented");
 			&hterror("Not Implemented",
-				"Only GET, HEAD and POST are supported.");
+				"Only GET is supported.");
 			&log; exit;
 		}
 		($address, $variables) = split(/\?/, $address);
