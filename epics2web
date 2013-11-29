@@ -261,7 +261,7 @@ sub master {
 				$content .= "{\n";
 			} else {
 				$request_uri = $address . (($variables) ? "?$variables" : "");
-				$content .= '<html><head><meta http-equiv="refresh" content="2;url='.$request_uri.'"><title>EPICS 2 WEB</title><body><table>';
+				$content .= '<html><head><meta http-equiv="refresh" content="2"><title>EPICS 2 WEB</title><body><table>';
 			}
 
 			undef $SIG{'__DIE__'};
