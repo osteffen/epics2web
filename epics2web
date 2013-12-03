@@ -5,6 +5,9 @@ $VERSION = "1.7.1 (Demonic/Linux)";
 
 use lib "$ENV{EPICS_BASE}/lib/perl";
 use CA;
+use JSON;
+
+use Data::Dumper;
 
 # HTTPi Hypertext Tiny Truncated Process Implementation
 # Copyright 1999-2012 Cameron Kaiser and Contributors # All rights reserved
@@ -256,18 +259,14 @@ sub master {
 		} else {
 
 			my @pvs = split( "/", $address);
+			
+			my @data;
 
-			if($variables eq "json") {
-				$content .= "{\n";
-			} else {
-				$request_uri = $address . (($variables) ? "?$variables" : "");
-				$content .= '<html><head><meta http-equiv="refresh" content="2"><title>EPICS 2 WEB</title><body><table>';
-			}
-
+			# deactivate error handler of the server so we can catch errors
 			undef $SIG{'__DIE__'};
-			my $first=1;
 
 			foreach my $pv (@pvs) {
+
 				next unless $pv;
 				next unless (length($pv) < 60);
 
@@ -278,31 +277,22 @@ sub master {
 					CA->pend_io(1);
 				};
 
-				if ($@) {
-					unless($variables eq "json") {
-						$content .= "<tr><td>".$pv."</td><td>***Not Connected ***</td></tr>\n";
-					}
+				if ($@) {  # in case of error
+					push(@data, {"PV" => $pv, "Value" => "*** Not Connected ***", "Time" => time()*1000 } );
 				} else {
-					if($variables eq "json") {
-							if($first) {
-								$first=0;
-							} else {
-								$content .= ",\n";
-							}
-							$content .= ' "'.$pv.'": '.$chan->value;
-					} else {
-							$content .= "<tr><td>".$pv."</td><td>".$chan->value."</td></tr>\n";
-					}
+					push(@data, {"PV" => $pv, "Value" => $chan->value, "Time" => time()*1000 } );
 				}
 			}
 
-			if($variables eq "json") {
-				$content .= "\n}\n";
+			# reenable error handler
+			$SIG{'__DIE__'} = \&dead;
+
+			if( $variables eq "json" ) {
+				$content .= encode_json( \@data );
 			} else {
-				$content .= "</table></body></html>";
+				$content .= encode_html( \@data );
 			}
 			
-			$SIG{'__DIE__'} = \&dead;
 
 		}
 
@@ -322,6 +312,18 @@ sub master {
 }
 
 exit;
+}
+
+sub encode_html {
+	my $d = shift;
+
+	$c = "<html><head><title>EPICS 2 WEB></title><meta http-equiv=\"refresh\" content=\"2\"></head><body><table>";
+	foreach my $row (@$d) {
+		$c .= "<tr><td>$row->{'PV'}</td><td>$row->{'Value'}</td></tr>";
+	}
+	$c .= "</table></body></html>";
+
+	return $c;
 }
 
 
